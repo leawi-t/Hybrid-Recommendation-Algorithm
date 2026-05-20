@@ -1,0 +1,19 @@
+# Raw and processed data — too large for git
+data/raw/*.csv
+data/raw/*.gz
+data/raw/*.json
+data/raw/*.py
+data/processed/
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+src/__pycache__/
+
+# Pickle/model files
+*.pkl
+
+# OS files
+.DS_Store
+Thumbs.db
