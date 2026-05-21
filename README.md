@@ -43,12 +43,12 @@ diversity. Measured using Intra-List Diversity (ILD).
 ## Evaluation Results
 *(evaluated on 200 users with ≥3 ground truth interactions)*
 
-| Metric | Standard CF | MMR Diversified |
+| Metric | Standard RECS | MMR Diversified |
 |--------|-------------|-----------------|
-| Precision@10 | [YOUR VALUE] | [YOUR VALUE] |
-| Recall@10 | [YOUR VALUE] | [YOUR VALUE] |
-| ILD (Diversity) | [YOUR VALUE] | [YOUR VALUE] |
-| Coverage | [YOUR VALUE] | [YOUR VALUE] |
+| Precision@10 |  0.0000 |  0.0000 |
+| Recall@10 |  0.0000] |  0.0000 |
+| ILD (Diversity) |  0.9016 |  0.985 |
+| Coverage |  0.0169 | Coverage: 0.0162 |
 
 **Key finding**: MMR increases ILD from [X] to [Y], demonstrating active 
 filter bubble reduction at a manageable precision cost.
