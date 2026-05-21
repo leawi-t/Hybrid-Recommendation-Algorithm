@@ -66,12 +66,21 @@ def main():
     std_recalls, mmr_recalls = [], []
     
     # Pull sample active test users to evaluate
+    # Pull sample active test users to evaluate
     test_grouped = test_df.groupby('user_id')['item_id'].apply(list).to_dict()
 
-    # Only keep users with enough ground truth to evaluate fairly
-    test_grouped = {uid: items for uid, items in test_grouped.items() if len(items) >= 3}   
-    sample_users = list(test_grouped.keys())[:200]
-    print(f"Evaluating on {len(sample_users)} users with >=3 ground truth items")
+    # CRITICAL FIX: Only evaluate test items that the SVD model actually trained on!
+    train_items_vocab = set(orchestrator.item_to_idx.keys())
+    
+    valid_test_grouped = {}
+    for uid, items in test_grouped.items():
+        # Keep test items only if they exist inside the training vocabulary
+        scorable_items = [it for it in items if it in train_items_vocab]
+        if len(scorable_items) >= 3:
+            valid_test_grouped[uid] = scorable_items
+
+    sample_users = list(valid_test_grouped.keys())[:200]
+    print(f"Evaluating on {len(sample_users)} users with >=3 scorable ground truth items")
     
     std_precisions, std_diversities = [], []
     mmr_precisions, mmr_diversities = [], []
@@ -84,7 +93,7 @@ def main():
     all_mmr_recs = []
 
     for uid in sample_users:
-        ground_truth = test_grouped[uid]
+        ground_truth = valid_test_grouped[uid]
     
         recs_std = orchestrator.get_top_n(uid, n=10, use_mmr=False)
         recs_mmr = orchestrator.get_top_n(uid, n=10, use_mmr=True, lambda_param=0.5)

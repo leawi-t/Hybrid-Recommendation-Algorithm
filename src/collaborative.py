@@ -62,7 +62,14 @@ def train_hybrid_cf(train_path, tfidf_matrix, feature_item_ids):
     )
     trainset = surprise_data.build_full_trainset()
 
-    algo = SVD(n_factors=20, random_state=42, verbose=False)
+    algo = SVD(
+        n_factors=50,          # Give the model more capacity to learn detailed nuances
+        reg_all=0.1,           # Increase baseline regularization across the board
+        biased=True,           
+        random_state=42, 
+        verbose=False
+    )
+    
     print('Training Surprise SVD collaborative model...')
     algo.fit(trainset)
     print('Surprise SVD model training complete!')

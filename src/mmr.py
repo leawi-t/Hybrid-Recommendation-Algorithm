@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
-def maximal_marginal_relevance(item_scores, tfidf_matrix, item_to_idx, idx_to_item, item_id_to_tfidf_row, top_k=10, lambda_param=0.5):
+def maximal_marginal_relevance(item_scores, tfidf_matrix, item_to_idx, idx_to_item, item_id_to_tfidf_row, top_k=10, lambda_param=0.85):
     """
     Applies MMR by securely mapping internal model indices back to true TF-IDF rows.
     """

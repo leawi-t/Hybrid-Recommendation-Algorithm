@@ -9,54 +9,58 @@ class CascadeOrchestrator:
         self.item_features = item_features
         self.tfidf_matrix = tfidf_matrix
         
-        # Unpack indices mappings
+        # 1. Unpack mappings
         self.user_to_idx, _, self.item_to_idx, _ = dataset.mapping()
-        self.idx_to_item = {v: k for k, v in self.item_to_idx.items()}
+        self.idx_to_item = {idx: item_id for item_id, idx in self.item_to_idx.items()}
         
-        # CRITICAL RE-ALIGNMENT FIX: Map Item String ID -> Row position in TF-IDF matrix
+        # 2. Map item IDs directly to their row in the TF-IDF matrix
         self.item_id_to_tfidf_row = {item_id: idx for idx, item_id in enumerate(feature_item_ids)}
         
-        # Global popularity fallback metrics
-        train_df = pd.read_csv(train_path, dtype={'item_id': str})
-        self.popularity_fallback = train_df['item_id'].value_counts().index.tolist()
+        # 3. Store the raw surprise algo object for direct unmapped predictions
+        self.algo = model.algo
 
-    def get_top_n(self, user_id, n=10, use_mmr=False, lambda_param=0.5, candidate_pool=None):
-        if user_id not in self.user_to_idx:
-            fallback = self.popularity_fallback
-            if candidate_pool:
-                fallback = [i for i in fallback if i in candidate_pool]
-            return fallback[:n]
+    def get_top_n(self, raw_user_id, n=10, use_mmr=False, lambda_param=0.5):
+        # Fallback if user is completely unknown to training set
+        if raw_user_id not in self.user_to_idx:
+            return []
+            
+        # Candidate pool: string item IDs that exist in BOTH SVD training vocabulary AND TF-IDF matrix
+        candidate_item_ids = [
+            item_id for item_id in self.item_to_idx.keys() 
+            if item_id in self.item_id_to_tfidf_row
+        ]
+        
+        # Call the native surprise predict method directly using raw string IDs 
+        # This completely bypasses any internal numpy array index alignment bugs
+        scored_candidates = []
+        for item_id in candidate_item_ids:
+            est_score = self.algo.predict(str(raw_user_id), str(item_id)).est
+            scored_candidates.append((item_id, est_score))
+            
+        # Sort candidates strictly by their true estimated score value
+        scored_candidates.sort(key=lambda x: x[1], reverse=True)
+        
+        if not use_mmr:
+            # Return top N raw string IDs directly
+            return [item_id for item_id, score in scored_candidates[:n]]
+            
+        # For MMR, extract the top 100 scored string items to diversify
+        top_candidates = scored_candidates[:500]  # Grab the top 500 items instead of 100
+        top_scores = np.array([score for item_id, score in top_candidates])
 
-        internal_user_idx = self.user_to_idx[user_id]
-        all_item_indices = np.arange(len(self.item_to_idx))
-
-        # Filter to candidate pool if provided
-        if candidate_pool:
-            all_item_indices = np.array([
-                idx for idx, item_id in self.idx_to_item.items()
-                if item_id in candidate_pool
-            ])
-
-        scores = self.model.predict(
-            user_ids=internal_user_idx,
-            item_ids=all_item_indices,
-            item_features=self.item_features
+        # Re-construct the temporary indexing system that your specific mmr.py script expects
+        # mmr.py uses: idx_to_item[idx] and item_to_idx[item_id]
+        tmp_item_to_idx = {item_id: i for i, (item_id, _) in enumerate(top_candidates)}
+        tmp_idx_to_item = {i: item_id for i, (item_id, _) in enumerate(top_candidates)}
+        
+        diversified_items = maximal_marginal_relevance(
+            item_scores=top_scores,
+            tfidf_matrix=self.tfidf_matrix,
+            item_to_idx=tmp_item_to_idx,
+            idx_to_item=tmp_idx_to_item,
+            item_id_to_tfidf_row=self.item_id_to_tfidf_row,
+            top_k=n,
+            lambda_param=lambda_param
         )
-
-        if use_mmr:
-            # Rebuild scores array indexed from 0 for MMR compatibility
-            local_idx_to_item = {i: self.idx_to_item[all_item_indices[i]] for i in range(len(all_item_indices))}
-            local_item_to_idx = {v: k for k, v in local_idx_to_item.items()}
-            return maximal_marginal_relevance(
-                item_scores=scores,
-                tfidf_matrix=self.tfidf_matrix,
-                item_to_idx=local_item_to_idx,
-                idx_to_item=local_idx_to_item,
-                item_id_to_tfidf_row=self.item_id_to_tfidf_row,
-                top_k=n,
-                lambda_param=lambda_param
-            )
-
-        top_indices = np.argsort(-scores)[:n]
-        return [self.idx_to_item[all_item_indices[i]] for i in top_indices]
-
+        
+        return diversified_items
