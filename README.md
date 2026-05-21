@@ -95,5 +95,5 @@ LightFM (joint training) encountered Windows/OpenMP compilation issues. The casc
 **Why Surprise SVD over other CF methods?**  
 Pure Python/NumPy implementation with no platform-specific compilation. Mathematically equivalent to standard matrix factorization: decomposes the user-item matrix into user latent factors P and item latent factors Q, computing relevance as r = P^T · Q.
 
-**Why λ=0.8 for MMR?**  
+**Why λ=0.85 for MMR?**  
 More weight to the precision than the diversity to make accurate but diverse result. This was chosen empirically — higher λ increases precision but reduces ILD gains; lower λ maximises diversity but risks irrelevant recommendations.
