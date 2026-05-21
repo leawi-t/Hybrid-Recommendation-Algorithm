@@ -45,10 +45,10 @@ diversity. Measured using Intra-List Diversity (ILD).
 
 | Metric | Standard RECS | MMR Diversified |
 |--------|-------------|-----------------|
-| Precision@10 |  0.0000 |  0.0000 |
-| Recall@10 |  0.0000] |  0.0000 |
-| ILD (Diversity) |  0.9016 |  0.985 |
-| Coverage |  0.0169 | Coverage: 0.0162 |
+| Precision@10 | 0.0010  |  0.0000 |
+| Recall@10 |  0.0023 |  0.0000 |
+| ILD (Diversity) |  0.8859 |  0.9836  |
+| Coverage |   0.0057 | Coverage: 0.0102 |
 
 **Key finding**: MMR increases ILD from [X] to [Y], demonstrating active 
 filter bubble reduction at a manageable precision cost.
@@ -90,18 +90,10 @@ python main.py
 ## Architectural Decisions
 
 **Why cascade hybrid over joint training?**  
-LightFM (joint training) encountered Windows/OpenMP compilation issues. The 
-cascade approach — SVD for CF, TF-IDF independently for content — is one of 
-the four hybrid strategies in the reference material and offers clearer 
-interpretability: each component has an explicit, auditable role.
+LightFM (joint training) encountered Windows/OpenMP compilation issues. The cascade approach — SVD for CF, TF-IDF independently for content — is one of the four hybrid strategies in the reference material and offers clearer interpretability: each component has an explicit, auditable role.
 
 **Why Surprise SVD over other CF methods?**  
-Pure Python/NumPy implementation with no platform-specific compilation. 
-Mathematically equivalent to standard matrix factorization: decomposes the 
-user-item matrix into user latent factors P and item latent factors Q, 
-computing relevance as r = P^T · Q.
+Pure Python/NumPy implementation with no platform-specific compilation. Mathematically equivalent to standard matrix factorization: decomposes the user-item matrix into user latent factors P and item latent factors Q, computing relevance as r = P^T · Q.
 
-**Why λ=0.5 for MMR?**  
-Equal weighting between relevance and diversity. This was chosen empirically — 
-higher λ increases precision but reduces ILD gains; lower λ maximises diversity 
-but risks irrelevant recommendations.
+**Why λ=0.8 for MMR?**  
+More weight to the precision than the diversity to make accurate but diverse result. This was chosen empirically — higher λ increases precision but reduces ILD gains; lower λ maximises diversity but risks irrelevant recommendations.
