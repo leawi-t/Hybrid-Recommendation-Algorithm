@@ -45,10 +45,10 @@ diversity. Measured using Intra-List Diversity (ILD).
 
 | Metric | Standard RECS | MMR Diversified |
 |--------|-------------|-----------------|
-| Precision@10 | 0.0010  |  0.0000 |
-| Recall@10 |  0.0023 |  0.0000 |
-| ILD (Diversity) |  0.8859 |  0.9836  |
-| Coverage |   0.0057 | Coverage: 0.0102 |
+| Precision@10 | 0.0005  |  0.0005 |
+| Recall@10 |  0.0010 |  0.0010 |
+| ILD (Diversity) |  0.8901 |  0.9983  |
+| Coverage |   0.0076 | Coverage: 0.0127 |
 
 **Key finding**: MMR increases ILD from [X] to [Y], demonstrating active 
 filter bubble reduction at a manageable precision cost.
